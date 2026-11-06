@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Panopticon</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background: url('digital_panopticon_boomerang.avif')  no-repeat center center fixed, url('digital_panopticon_boomerang.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        
+        .container {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            margin-top: 40vh;
+        }
+        
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 28px;
+        }
+        
+        p {
+            margin: 15px 0;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .status {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        
+        .granted {
+            background-color: rgba(0, 255, 0, 0.3);
+            border: 2px solid #00ff00;
+        }
+        
+        .denied {
+            background-color: rgba(255, 0, 0, 0.3);
+            border: 2px solid #ff0000;
+        }
+        
+        .prompt {
+            background-color: rgba(255, 255, 0, 0.3);
+            border: 2px solid #ffff00;
+        }
+        
+        button {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+
+<body>
+    <div class="container">
+        <h1>Please give all permissions</h1>
+        <p>If you have nothing to hide, show it.</p>
+        
+        <div id="microphoneStatus" class="status prompt">
+            Microphone: Permission not requested
+        </div>
+        
+        <div id="cameraStatus" class="status prompt">
+            Camera: Permission not requested
+        </div>
+        
+        <button id="requestPermissionsBtn">Request Permissions Again</button>
+        
+        <p id="infoText" style="font-size: 14px; margin-top: 25px; opacity: 0.9;">
+            <!-- The permissions will be requested automatically. <br> -->
+            This website does not store or process any data. <br>
+            Made by FönixFogelFuchs 2026
+        </p>
+    </div>
+
+    <script>
+        const microphoneStatus = document.getElementById('microphoneStatus');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const requestPermissionsBtn = document.getElementById('requestPermissionsBtn');
+        
+        let permissionsRequested = false;
+        
+        // Permissions automatically requested when the page loads
+        window.addEventListener('load', requestPermissions);
+        
+        // Function to update the status
+        function updateStatus(element, permissionState) {
+            element.className = 'status ';
+            
+            if (permissionState === 'granted') {
+                element.classList.add('granted');
+                element.textContent = element.id === 'microphoneStatus' 
+                    ? 'Microphone: Permission granted ✓' 
+                    : 'Camera: Permission granted ✓';
+            } else if (permissionState === 'denied') {
+                element.classList.add('denied');
+                element.textContent = element.id === 'microphoneStatus'
+                    ? 'Microphone: Permission denied ✗'
+                    : 'Camera: Permission denied ✗';
+            } else if (permissionState === 'prompt') {
+                element.classList.add('prompt');
+                element.textContent = element.id === 'microphoneStatus'
+                    ? 'Microphone: Permission not requested'
+                    : 'Camera: Permission not requested';
+            }
+        }
+        
+        // Function to request permissions
+        async function requestPermissions() {
+            if (permissionsRequested) {
+                return;
+            }
+            
+            permissionsRequested = true;
+            requestPermissionsBtn.disabled = true;
+            requestPermissionsBtn.textContent = 'Permissions are being requested...';
+            
+            try {
+                // Microphone permission request
+                const microphoneStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: true,
+                    video: false 
+                });
+                
+                // Immediately stop all tracks - we are not using the permission
+                microphoneStream.getTracks().forEach(track => track.stop());
+                updateStatus(microphoneStatus, 'granted');
+                
+            } catch (microphoneError) {
+                // If the permission was denied
+                if (microphoneError.name === 'NotAllowedError') {
+                    updateStatus(microphoneStatus, 'denied');
+                } else {
+                    console.error('Microphone error:', microphoneError);
+                    updateStatus(microphoneStatus, 'denied');
+                }
+            }
+            
+            try {
+                // Camera permission request
+                const cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: false,
+                    video: true 
+                });
+                
+                // Immediately stop all tracks - we are not using the permission
+                cameraStream.getTracks().forEach(track => track.stop());
+                updateStatus(cameraStatus, 'granted');
+                
+            } catch (cameraError) {
+                // If the permission was denied
+                if (cameraError.name === 'NotAllowedError') {
+                    updateStatus(cameraStatus, 'denied');
+                } else {
+                    console.error('Camera error:', cameraError);
+                    updateStatus(cameraStatus, 'denied');
+                }
+            }
+            
+            requestPermissionsBtn.textContent = 'Request Permissions';
+            requestPermissionsBtn.disabled = false;
+            permissionsRequested = false;
+        }
+        
+        // Event-Listener für den Button
+        requestPermissionsBtn.addEventListener('click', requestPermissions);
+    </script>
+</body>
+</html>

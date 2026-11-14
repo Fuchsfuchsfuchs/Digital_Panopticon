@@ -3,7 +3,7 @@ name: Deploy to Neocities
 on:
   push:
     branches:
-      - main # Passe dies an, falls dein Hauptbranch 'master' heißt
+      - main 
 
 concurrency:
   group: deploy-to-neocities
@@ -13,11 +13,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Lädt deine Dateien in den Runner
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Lädt das gesamte Repository direkt zu Neocities hoch (ohne npm!)
+      # NEUER SCHRITT: Löscht versteckte Git- und GitHub-Ordner vor dem Upload
+      - name: Clean up hidden files
+        run: rm -rf .git .github README.md
+
       - name: Deploy to Neocities
         uses: bcomnes/deploy-to-neocities@v1
         with:

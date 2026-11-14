@@ -1,0 +1,27 @@
+name: Deploy to Neocities
+
+on:
+  push:
+    branches:
+      - main # Passe dies an, falls dein Hauptbranch 'master' heißt
+
+concurrency: # Verhindert, dass sich mehrere gleichzeitige Deploys in die Quere kommen
+  group: deploy-to-neocities
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # HINWEIS: Falls du einen Static Site Generator (Hugo, Astro, Node.js etc.) nutzt,
+    # müssen hier deine Setup- und Build-Schritte stehen (z.B. npm install && npm run build).
+
+    - name: Deploy to Neocities
+      uses: bcomnes/deploy-to-neocities@v1
+      with:
+        api_token: ${{ secrets.NEOCITIES_API_TOKEN }}
+        cleanup: false # Auf 'true' setzen, wenn alte Dateien auf Neocities gelöscht werden sollen
+        dist_dir: public # Ändere dies zum Namen deines Ordners (z. B. dist, _site). Nutze '.', wenn deine Dateien ungebündelt direkt im Root-Verzeichnis des Repos liegen.

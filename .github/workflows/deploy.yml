@@ -24,4 +24,4 @@ jobs:
       with:
         api_token: ${{ secrets.NEOCITIES_API_TOKEN }}
         cleanup: false # Auf 'true' setzen, wenn alte Dateien auf Neocities gelöscht werden sollen
-        dist_dir: public # Ändere dies zum Namen deines Ordners (z. B. dist, _site). Nutze '.', wenn deine Dateien ungebündelt direkt im Root-Verzeichnis des Repos liegen.
+        dist_dir: . # Ändere dies zum Namen deines Ordners (z. B. dist, _site). Nutze '.', wenn deine Dateien ungebündelt direkt im Root-Verzeichnis des Repos liegen.

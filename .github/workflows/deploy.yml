@@ -5,7 +5,7 @@ on:
     branches:
       - main # Passe dies an, falls dein Hauptbranch 'master' heißt
 
-concurrency: # Verhindert, dass sich mehrere gleichzeitige Deploys in die Quere kommen
+concurrency:
   group: deploy-to-neocities
   cancel-in-progress: true
 
@@ -13,15 +13,32 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      # Bugfix 1: Lädt den Code in den Runner, damit die package.json gefunden wird
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # HINWEIS: Falls du einen Static Site Generator (Hugo, Astro, Node.js etc.) nutzt,
-    # müssen hier deine Setup- und Build-Schritte stehen (z.B. npm install && npm run build).
+      # Bugfix 2: Setzt Node.js auf und führt npm i explizit im Hauptverzeichnis aus
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-    - name: Deploy to Neocities
-      uses: bcomnes/deploy-to-neocities@v1
-      with:
-        api_token: ${{ secrets.NEOCITIES_API_TOKEN }}
-        cleanup: false # Auf 'true' setzen, wenn alte Dateien auf Neocities gelöscht werden sollen
-        dist_dir: . # Ändere dies zum Namen deines Ordners (z. B. dist, _site). Nutze '.', wenn deine Dateien ungebündelt direkt im Root-Verzeichnis des Repos liegen.
+      - name: Install dependencies
+        run: npm i
+        working-directory: . # Stellt sicher, dass npm im Root-Ordner sucht
+
+      # (Optional) Hier würde dein Build-Befehl stehen, falls du einen hast:
+      # - name: Build project
+      #   run: npm run build
+
+      # SCHUTZMASSNAHME: Verhindert, dass der riesige node_modules Ordner mit hochgeladen wird
+      - name: Clean up node_modules before deploy
+        run: rm -rf node_modules
+
+      # Deploy des gesamten Repositories
+      - name: Deploy to Neocities
+        uses: bcomnes/deploy-to-neocities@v1
+        with:
+          api_token: ${{ secrets.NEOCITIES_API_TOKEN }}
+          cleanup: false
+          dist_dir: '.' # '.' bedeutet, dass das komplette Hauptverzeichnis hochgeladen wird
